@@ -37,11 +37,14 @@ namespace ApplicationInsightsDataROI
             // telemetry initializers
             configuration.TelemetryInitializers.Add(new MyTelemetryInitializer());
             configuration.TelemetryInitializers.Add(new DefaultTelemetryInitializer());
+            configuration.TelemetryInitializers.Add(new BusinessTelemetryInitializer());
+            configuration.TelemetryInitializers.Add(new NodeNameTelemetryInitializer());
 
             // telemetry processors
             configuration.TelemetryProcessorChainBuilder
                 .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Collected); })
                 .Use((next) => { return new MyTelemetryProcessor(next); })
+                .Use((next) => { return new CleanAutoCollecctedTelemetryProcessor(next); })
                 .Use((next) => { return new ExampleTelemetryProcessor(next); })
                 .Use((next) => { return new SamplingTelemetryProcessor(next) {
                     IncludedTypes = "Dependency",
@@ -62,6 +65,13 @@ namespace ApplicationInsightsDataROI
 
             var iterations = 0;
 
+
+            MetricManager metricManager = new MetricManager(client);
+            var itemsProcessed = metricManager.CreateMetric("Items processed");
+            var processingFailed = metricManager.CreateMetric("Failed processing");
+            var processingSize = metricManager.CreateMetric("Processing size");
+            
+
             while (!state.IsTerminated)
             {
                 iterations++;
@@ -77,6 +87,11 @@ namespace ApplicationInsightsDataROI
                         var task = http.GetStringAsync("http://bing.com");
                         task.Wait();
 
+                        // metrics aggregation:
+                        //itemsProcessed.Track(1);
+                        //processingSize.Track(task.Result.Length);
+                        //processingFailed.Track(0);
+
                         client.TrackMetric("Response size", task.Result.Length);
                         client.TrackMetric("Successful responses", 1);
                     }
@@ -84,6 +99,9 @@ namespace ApplicationInsightsDataROI
                     {
                         client.TrackMetric("Successful responses", 0);
                         operaiton.Telemetry.Success = false;
+
+                        // metrics aggregation:
+                        //processingFailed.Track(1);
                     }
                 }
             }
