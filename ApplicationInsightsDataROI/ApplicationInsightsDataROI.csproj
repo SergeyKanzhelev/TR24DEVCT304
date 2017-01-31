@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BusinessTelemetryInitializer.cs" />
+    <Compile Include="CleanAutoCollecctedTelemetryProcessor.cs" />
     <Compile Include="NodeNameTelemetryInitializer.cs" />
     <Compile Include="ExampleTelemetryProcessor.cs" />
     <Compile Include="DefaultTelemetryInitializer.cs" />
