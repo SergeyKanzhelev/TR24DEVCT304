@@ -59,6 +59,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExampleTelemetryProcessor.cs" />
+    <Compile Include="DefaultTelemetryInitializer.cs" />
     <Compile Include="MyTelemetryProcessor.cs" />
     <Compile Include="MyTelemetryInitializer.cs" />
     <Compile Include="PriceCalculatorTelemetryProcessor.cs" />

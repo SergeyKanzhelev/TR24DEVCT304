@@ -23,7 +23,7 @@ namespace ApplicationInsightsDataROI
 
         public ProcessedItems Sent = new ProcessedItems();
 
-        public void OnTimedEvent(object sender, ElapsedEventArgs e)
+        private void OnTimedEvent(object sender, ElapsedEventArgs e)
         {
             if (this.IsTerminated)
             {
@@ -55,11 +55,22 @@ namespace ApplicationInsightsDataROI
 
             Console.WriteLine();
 
-            if (this.Sent.count > 1000)
+            if (this.Sent.size > 1000 * 1000)
             {
                 this.IsTerminated = true;
             }
         }
 
+        internal void Initialize()
+        {
+            this.IsTerminated = false;
+
+            // Create a timer with a two second interval.
+            this._timer = new System.Timers.Timer(TimeSpan.FromSeconds(1).TotalMilliseconds);
+            // Hook up the Elapsed event for the timer. 
+            this._timer.Elapsed += this.OnTimedEvent;
+            this._timer.AutoReset = true;
+            this._timer.Enabled = true;
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.DependencyCollector;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
@@ -19,14 +20,7 @@ namespace ApplicationInsightsDataROI
         static void Main(string[] args)
         {
             var state = new State();
-            state.IsTerminated = false;
-
-            // Create a timer with a two second interval.
-            state._timer = new System.Timers.Timer(TimeSpan.FromSeconds(1).TotalMilliseconds);
-            // Hook up the Elapsed event for the timer. 
-            state._timer.Elapsed += state.OnTimedEvent;
-            state._timer.AutoReset = true;
-            state._timer.Enabled = true;
+            state.Initialize();
 
             TelemetryConfiguration configuration = new TelemetryConfiguration();
             configuration.InstrumentationKey = "DEMO_KEY";
@@ -42,18 +36,26 @@ namespace ApplicationInsightsDataROI
 
             // telemetry initializers
             configuration.TelemetryInitializers.Add(new MyTelemetryInitializer());
+            configuration.TelemetryInitializers.Add(new DefaultTelemetryInitializer());
 
             // telemetry processors
             configuration.TelemetryProcessorChainBuilder
-                .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Sent); })
-                .Use((next) => { return new MyTelemetryProcessor(next); })
-                .Use((next) => { return new AdaptiveSamplingTelemetryProcessor(next) {
-                    InitialSamplingPercentage = 10,
-                    SamplingPercentageIncreaseTimeout = TimeSpan.FromSeconds(5),
-                    SamplingPercentageDecreaseTimeout = TimeSpan.FromSeconds(5),
-                    MaxTelemetryItemsPerSecond = 5,
-                    EvaluationInterval = TimeSpan.FromSeconds(10) };})
                 .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Collected); })
+                .Use((next) => { return new MyTelemetryProcessor(next); })
+                .Use((next) => { return new ExampleTelemetryProcessor(next); })
+                .Use((next) => { return new SamplingTelemetryProcessor(next) {
+                    IncludedTypes = "Dependency",
+                    SamplingPercentage = 10 };
+                })
+                .Use((next) => { return new AdaptiveSamplingTelemetryProcessor(next) {
+                    ExcludedTypes = "Event",
+                    MaxTelemetryItemsPerSecond = 2,
+                    SamplingPercentageIncreaseTimeout = TimeSpan.FromSeconds(1),
+                    SamplingPercentageDecreaseTimeout = TimeSpan.FromSeconds(1),
+                    EvaluationInterval = TimeSpan.FromSeconds(1),
+                    InitialSamplingPercentage = 25};
+                })
+                .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Sent); })
                 .Build();
 
             TelemetryClient client = new TelemetryClient(configuration);
@@ -62,25 +64,31 @@ namespace ApplicationInsightsDataROI
 
             while (!state.IsTerminated)
             {
-                client.TrackEvent("test");
                 iterations++;
 
-                try
+                using (var operaiton = client.StartOperation<RequestTelemetry>("Process item"))
                 {
-                    HttpClient http = new HttpClient();
-                    var task = http.GetStringAsync("http://bing.com");
-                    task.Wait();
+                    client.TrackEvent("test");
+                    client.TrackTrace("Something happened");
 
-                    //client.TrackMetric("Response size", task.Result.Length);
-                    //client.TrackMetric("Successful responses", 1);
-                }
-                catch (Exception exc)
-                {
-                    //client.TrackMetric("Successful responses", 0);
+                    try
+                    {
+                        HttpClient http = new HttpClient();
+                        var task = http.GetStringAsync("http://bing.com");
+                        task.Wait();
+
+                        client.TrackMetric("Response size", task.Result.Length);
+                        client.TrackMetric("Successful responses", 1);
+                    }
+                    catch (Exception exc)
+                    {
+                        client.TrackMetric("Successful responses", 0);
+                        operaiton.Telemetry.Success = false;
+                    }
                 }
             }
 
-            Console.WriteLine($"Finished in {iterations} iterations!");
+            Console.WriteLine($"Program sent 1Mb of telemetry in {iterations} iterations!");
             Console.ReadLine();
         }
     }
