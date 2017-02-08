@@ -19,95 +19,12 @@ namespace ApplicationInsightsDataROI
 
         static void Main(string[] args)
         {
-            var state = new State();
-            state.Initialize();
-
-            TelemetryConfiguration configuration = new TelemetryConfiguration();
-            configuration.InstrumentationKey = "DEMO_KEY";
-
-            var telemetryChannel = new ServerTelemetryChannel();
-            telemetryChannel.Initialize(configuration);
-            configuration.TelemetryChannel = telemetryChannel;
-            
-
-            // data collection modules
-            var dependencies = new DependencyTrackingTelemetryModule();
-            dependencies.Initialize(configuration);
-
-            // telemetry initializers
-            configuration.TelemetryInitializers.Add(new MyTelemetryInitializer());
-            configuration.TelemetryInitializers.Add(new DefaultTelemetryInitializer());
-            configuration.TelemetryInitializers.Add(new BusinessTelemetryInitializer());
-            configuration.TelemetryInitializers.Add(new NodeNameTelemetryInitializer());
-
-            // telemetry processors
-            configuration.TelemetryProcessorChainBuilder
-                .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Collected); })
-                .Use((next) => { return new MyTelemetryProcessor(next); })
-                .Use((next) => { return new CleanAutoCollecctedTelemetryProcessor(next); })
-                .Use((next) => { return new ExampleTelemetryProcessor(next); })
-                .Use((next) => { return new SamplingTelemetryProcessor(next) {
-                    IncludedTypes = "Dependency",
-                    SamplingPercentage = 10 };
-                })
-                .Use((next) => { return new AdaptiveSamplingTelemetryProcessor(next) {
-                    ExcludedTypes = "Event",
-                    MaxTelemetryItemsPerSecond = 2,
-                    SamplingPercentageIncreaseTimeout = TimeSpan.FromSeconds(1),
-                    SamplingPercentageDecreaseTimeout = TimeSpan.FromSeconds(1),
-                    EvaluationInterval = TimeSpan.FromSeconds(1),
-                    InitialSamplingPercentage = 25};
-                })
-                .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Sent); })
-                .Build();
-
-            TelemetryClient client = new TelemetryClient(configuration);
-
-            var iterations = 0;
-
-
-            MetricManager metricManager = new MetricManager(client);
-            var itemsProcessed = metricManager.CreateMetric("Items processed");
-            var processingFailed = metricManager.CreateMetric("Failed processing");
-            var processingSize = metricManager.CreateMetric("Processing size");
-            
-
-            while (!state.IsTerminated)
-            {
-                iterations++;
-
-                using (var operaiton = client.StartOperation<RequestTelemetry>("Process item"))
-                {
-                    client.TrackEvent("test");
-                    client.TrackTrace("Something happened");
-
-                    try
-                    {
-                        HttpClient http = new HttpClient();
-                        var task = http.GetStringAsync("http://bing.com");
-                        task.Wait();
-
-                        // metrics aggregation:
-                        //itemsProcessed.Track(1);
-                        //processingSize.Track(task.Result.Length);
-                        //processingFailed.Track(0);
-
-                        client.TrackMetric("Response size", task.Result.Length);
-                        client.TrackMetric("Successful responses", 1);
-                    }
-                    catch (Exception exc)
-                    {
-                        client.TrackMetric("Successful responses", 0);
-                        operaiton.Telemetry.Success = false;
-
-                        // metrics aggregation:
-                        //processingFailed.Track(1);
-                    }
-                }
-            }
-
-            Console.WriteLine($"Program sent 1Mb of telemetry in {iterations} iterations!");
-            Console.ReadLine();
+            //Demo1.Run(); // default AI model with request/dependency/exception/trace and event
+            Demo2.Run(); // price calculation and adaptive sampling demo
+            //Demo3.Run();
+            //Demo4.Run();
+            //Demo5.Run();
         }
+
     }
 }
