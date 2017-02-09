@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BusinessTelemetryInitializer.cs" />
+    <Compile Include="Demo5.cs" />
     <Compile Include="DependencyFilteringTelemetryProcessor.cs" />
     <Compile Include="Demo4.cs" />
     <Compile Include="Demo3.cs" />
@@ -70,7 +71,7 @@
     <Compile Include="DependencyExampleTelemetryProcessor.cs" />
     <Compile Include="DefaultTelemetryInitializer.cs" />
     <Compile Include="MyTelemetryProcessor.cs" />
-    <Compile Include="MyTelemetryInitializer.cs" />
+    <Compile Include="AppVersionTelemetryInitializer.cs" />
     <Compile Include="PriceCalculatorTelemetryProcessor.cs" />
     <Compile Include="Program - backup.cs" />
     <Compile Include="Program.cs" />

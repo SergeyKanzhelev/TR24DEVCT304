@@ -12,15 +12,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 
+
 namespace ApplicationInsightsDataROI
 {
-    class Program_backup
+    class Demo5
     {
-
-        static void Main_backup(string[] args)
+        public static void Run()
         {
-            var state = new State();
-            state.Initialize();
 
             TelemetryConfiguration configuration = new TelemetryConfiguration();
             configuration.InstrumentationKey = "fb8a0b03-235a-4b52-b491-307e9fd6b209";
@@ -28,60 +26,46 @@ namespace ApplicationInsightsDataROI
             var telemetryChannel = new ServerTelemetryChannel();
             telemetryChannel.Initialize(configuration);
             configuration.TelemetryChannel = telemetryChannel;
-            
 
-            // data collection modules
+            // automatically track dependency calls
             var dependencies = new DependencyTrackingTelemetryModule();
             dependencies.Initialize(configuration);
 
-            // telemetry initializers
-            configuration.TelemetryInitializers.Add(new AppVersionTelemetryInitializer());
-            configuration.TelemetryInitializers.Add(new DefaultTelemetryInitializer());
-            configuration.TelemetryInitializers.Add(new BusinessTelemetryInitializer());
-            configuration.TelemetryInitializers.Add(new NodeNameTelemetryInitializer());
+            // automatically correlate all telemetry data with request
             configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
 
-            // telemetry processors
+            // set default properties for all telemetry items
+            configuration.TelemetryInitializers.Add(new DefaultTelemetryInitializer());
+
+            // send all event telemetry to a different iKey
+            configuration.TelemetryInitializers.Add(new BusinessTelemetryInitializer());
+
+            // configure all telemetry to be sent to a single node
+            configuration.TelemetryInitializers.Add(new NodeNameTelemetryInitializer());
+
+            // initialize price calculation logic
+            var state = new State();
+            state.Initialize();
+
+            // enable sampling
             configuration.TelemetryProcessorChainBuilder
+                // this telemetry processor will be executed first for all telemetry items to calculate the size and # of items
                 .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Collected); })
-//                .Use((next) => { return new MyTelemetryProcessor(next); })
-//                .Use((next) => { return new CleanAutoCollecctedTelemetryProcessor(next); })
-//                .Use((next) => { return new ExampleTelemetryProcessor(next); })
-                // send only 10% of all dependency data
-                .Use((next) =>
-                {
-                    return new SamplingTelemetryProcessor(next)
-                    {
-                        IncludedTypes = "Dependency",
-                        SamplingPercentage = 10
-                    };
-                })
-                // start sampling when load exceeds 2 events per second for all telemetry types except events
-                .Use((next) =>
-                {
-                    return new AdaptiveSamplingTelemetryProcessor(next)
-                    {
-                        ExcludedTypes = "Event",
-                        MaxTelemetryItemsPerSecond = 2,
-                        SamplingPercentageIncreaseTimeout = TimeSpan.FromSeconds(1),
-                        SamplingPercentageDecreaseTimeout = TimeSpan.FromSeconds(1),
-                        EvaluationInterval = TimeSpan.FromSeconds(1),
-                        InitialSamplingPercentage = 25
-                    };
-                })
+
+                // this telemetry processor will be execuyted ONLY when telemetry is sampled in
                 .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Sent); })
                 .Build();
+
 
             TelemetryClient client = new TelemetryClient(configuration);
 
             var iterations = 0;
 
-
+            // configure metrics collection
             MetricManager metricManager = new MetricManager(client);
             var itemsProcessed = metricManager.CreateMetric("Items processed");
             var processingFailed = metricManager.CreateMetric("Failed processing");
             var processingSize = metricManager.CreateMetric("Processing size");
-            
 
             while (!state.IsTerminated)
             {
@@ -91,7 +75,7 @@ namespace ApplicationInsightsDataROI
                 using (var operaiton = client.StartOperation<RequestTelemetry>("Process item"))
                 {
                     client.TrackEvent("test");
-                    client.TrackTrace("Something happened");
+                    client.TrackTrace("Something happened", SeverityLevel.Information);
 
                     try
                     {
@@ -99,28 +83,38 @@ namespace ApplicationInsightsDataROI
                         var task = http.GetStringAsync("http://bing.com");
                         task.Wait();
 
-                        // metrics aggregation:
-                        //itemsProcessed.Track(1);
-                        //processingSize.Track(task.Result.Length);
-                        //processingFailed.Track(0);
+                        // metrics aggregation. Metrics are aggregated and sent once per minute
+                        itemsProcessed.Track(1);
+                        processingSize.Track(task.Result.Length);
+                        processingFailed.Track(0);
 
-                        //client.TrackMetric("Response size", task.Result.Length);
-                        //client.TrackMetric("Successful responses", 1);
+                        // raw metric telemetry. Each call represents a document.
+                        client.TrackMetric("[RAW] Response size", task.Result.Length);
+                        client.TrackMetric("[RAW] Successful responses", 1);
+
                     }
                     catch (Exception exc)
                     {
-                        //client.TrackMetric("Successful responses", 0);
-                        //operaiton.Telemetry.Success = false;
+                        // raw metric telemetry
+                        client.TrackMetric("[RAW] Successful responses", 0);
 
                         // metrics aggregation:
-                        //processingFailed.Track(1);
+                        processingFailed.Track(1);
+
+                        client.TrackException(exc);
+                        operaiton.Telemetry.Success = false;
                     }
+
+                    //                    client.StopOperation(operaiton);
+                    //                    Console.WriteLine($"Iteration {iterations}. Elapesed time: {operaiton.Telemetry.Duration}");
 
                 }
             }
 
-            Console.WriteLine($"Program sent 1Mb of telemetry in {iterations} iterations!");
-            Console.ReadLine();
+            // send all metrics before exiting the program
+            metricManager.Flush();
+            //Console.WriteLine($"Program sent 1Mb of telemetry in {iterations} iterations!");
+            //Console.ReadLine();
         }
     }
 }

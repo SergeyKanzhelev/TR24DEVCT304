@@ -8,7 +8,7 @@ using Microsoft.ApplicationInsights.Channel;
 
 namespace ApplicationInsightsDataROI
 {
-    class MyTelemetryInitializer : ITelemetryInitializer
+    class AppVersionTelemetryInitializer : ITelemetryInitializer
     {
         public void Initialize(ITelemetry telemetry)
         {
