@@ -107,7 +107,7 @@ namespace ApplicationInsightsDataROI
                 }
             }
 
-            Console.WriteLine($"Program sent 1Mb of telemetry in {iterations} iterations!");
+            Console.WriteLine($"Program sent 100K of telemetry in {iterations} iterations!");
             Console.ReadLine();
         }
     }

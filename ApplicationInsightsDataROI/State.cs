@@ -63,7 +63,7 @@ namespace ApplicationInsightsDataROI
             }
             Console.WriteLine();
 
-            if (this.Sent.size > 1000 * 1000)
+            if (this.Sent.size > 100 * 1000)
             {
                 this.IsTerminated = true;
             }

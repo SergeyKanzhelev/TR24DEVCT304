@@ -43,6 +43,9 @@ namespace ApplicationInsightsDataROI
                 // this telemetry processor will be executed first for all telemetry items to calculate the size and # of items
                 .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Collected); })
 
+                // exemplify dependency telemetry that is faster than 100 msec
+                .Use((next) => { return new DependencyExampleTelemetryProcessor(next); })
+
                 // sample all telemetry to 10%
                 .Use((next) =>
                 {
@@ -53,9 +56,6 @@ namespace ApplicationInsightsDataROI
                 })
 
 
-                // exemplify dependency telemetry that is faster than 100 msec
-                .Use((next) => { return new DependencyExampleTelemetryProcessor(next); })
-                
                 // this telemetry processor will be execuyted ONLY when telemetry is sampled in
                 .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Sent); })
                 .Build();
@@ -95,8 +95,8 @@ namespace ApplicationInsightsDataROI
                 }
             }
 
-            //Console.WriteLine($"Program sent 1Mb of telemetry in {iterations} iterations!");
-            //Console.ReadLine();
+            Console.WriteLine($"Program sent 100K of telemetry in {iterations} iterations!");
+            Console.ReadLine();
         }
     }
 }

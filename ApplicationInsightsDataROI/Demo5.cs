@@ -113,8 +113,9 @@ namespace ApplicationInsightsDataROI
 
             // send all metrics before exiting the program
             metricManager.Flush();
-            //Console.WriteLine($"Program sent 1Mb of telemetry in {iterations} iterations!");
-            //Console.ReadLine();
+
+            Console.WriteLine($"Program sent 100K of telemetry in {iterations} iterations!");
+            Console.ReadLine();
         }
     }
 }
