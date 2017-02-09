@@ -21,14 +21,11 @@ namespace ApplicationInsightsDataROI
         public static void Run()
         {
 
+            // set iKey
             TelemetryConfiguration configuration = new TelemetryConfiguration();
             configuration.InstrumentationKey = "fb8a0b03-235a-4b52-b491-307e9fd6b209";
 
-            var telemetryChannel = new ServerTelemetryChannel();
-            telemetryChannel.Initialize(configuration);
-            configuration.TelemetryChannel = telemetryChannel;
-            
-            // automatically track dependency calls
+            // automatically collect dependency calls
             var dependencies = new DependencyTrackingTelemetryModule();
             dependencies.Initialize(configuration);
 
@@ -47,8 +44,8 @@ namespace ApplicationInsightsDataROI
 
                 using (var operaiton = client.StartOperation<RequestTelemetry>("Process item"))
                 {
-                    client.TrackEvent("test");
-                    client.TrackTrace("Something happened", SeverityLevel.Information);
+                    client.TrackEvent("test", new Dictionary<string, string>() { { "iteration", iterations.ToString() } });
+                    client.TrackTrace($"Iteration {iterations} happened", SeverityLevel.Information);
 
                     try
                     {
@@ -65,12 +62,9 @@ namespace ApplicationInsightsDataROI
 
                     client.StopOperation(operaiton);
                     Console.WriteLine($"Iteration {iterations}. Elapesed time: {operaiton.Telemetry.Duration}");
-
                 }
-            }
 
-            Console.WriteLine($"Program sent 1Mb of telemetry in {iterations} iterations!");
-            Console.ReadLine();
+            }
         }
     }
 
