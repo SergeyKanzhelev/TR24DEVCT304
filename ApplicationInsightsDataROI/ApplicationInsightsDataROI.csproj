@@ -60,11 +60,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BusinessTelemetryInitializer.cs" />
+    <Compile Include="DependencyFilteringTelemetryProcessor.cs" />
+    <Compile Include="Demo4.cs" />
+    <Compile Include="Demo3.cs" />
     <Compile Include="Demo2.cs" />
     <Compile Include="Demo1.cs" />
     <Compile Include="CleanAutoCollecctedTelemetryProcessor.cs" />
     <Compile Include="NodeNameTelemetryInitializer.cs" />
-    <Compile Include="ExampleTelemetryProcessor.cs" />
+    <Compile Include="DependencyExampleTelemetryProcessor.cs" />
     <Compile Include="DefaultTelemetryInitializer.cs" />
     <Compile Include="MyTelemetryProcessor.cs" />
     <Compile Include="MyTelemetryInitializer.cs" />

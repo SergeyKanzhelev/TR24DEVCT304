@@ -20,9 +20,9 @@ namespace ApplicationInsightsDataROI
         static void Main(string[] args)
         {
             //Demo1.Run(); // default AI model with request/dependency/exception/trace and event
-            Demo2.Run(); // price calculation and adaptive sampling demo
-            //Demo3.Run();
-            //Demo4.Run();
+            //Demo2.Run(); // price calculation and adaptive sampling demo
+            //Demo3.Run(); //exemplification of dependencies
+            Demo4.Run();
             //Demo5.Run();
         }
 

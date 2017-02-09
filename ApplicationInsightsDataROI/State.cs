@@ -53,8 +53,14 @@ namespace ApplicationInsightsDataROI
                 Console.WriteLine($"Sent    \tsize: {gbs} Gb \tin {this.Sent.count} items");
             }
 
-            Console.WriteLine($"Ratio: {this.Collected.size / this.Sent.size}");
-
+            if (this.Sent.size == 0)
+            {
+                Console.WriteLine("Ratio: N/A");
+            }
+            else
+            {
+                Console.WriteLine($"Ratio: {this.Collected.size / this.Sent.size}");
+            }
             Console.WriteLine();
 
             if (this.Sent.size > 1000 * 1000)

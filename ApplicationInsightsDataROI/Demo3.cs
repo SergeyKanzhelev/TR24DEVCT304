@@ -15,7 +15,7 @@ using System.Timers;
 
 namespace ApplicationInsightsDataROI
 {
-    class Demo2
+    class Demo3
     {
         public static void Run()
         {
@@ -43,30 +43,18 @@ namespace ApplicationInsightsDataROI
                 // this telemetry processor will be executed first for all telemetry items to calculate the size and # of items
                 .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Collected); })
 
-                // this is a standard fixed sampling processor that will let only 10% 
-               .Use((next) =>
+                // sample all telemetry to 10%
+                .Use((next) =>
                 {
                     return new SamplingTelemetryProcessor(next)
                     {
-                        IncludedTypes = "Dependency",
                         SamplingPercentage = 10
                     };
                 })
 
-                // this is a standard adaptive sampling telemetry processor that will sample in/out any telemetry item it receives
-                .Use((next) =>
-                {
 
-                    return new AdaptiveSamplingTelemetryProcessor(next)
-                    {
-                        ExcludedTypes = "Event", // exclude custom events from being sampled
-                        MaxTelemetryItemsPerSecond = 1, //default: 
-                        SamplingPercentageIncreaseTimeout = TimeSpan.FromSeconds(1), //default: 
-                        SamplingPercentageDecreaseTimeout = TimeSpan.FromSeconds(1), //default: 
-                        EvaluationInterval = TimeSpan.FromSeconds(1), //default: 
-                        InitialSamplingPercentage = 25 //default: 
-                    };
-                })
+                // exemplify dependency telemetry that is faster than 100 msec
+                .Use((next) => { return new DependencyExampleTelemetryProcessor(next); })
                 
                 // this telemetry processor will be execuyted ONLY when telemetry is sampled in
                 .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Sent); })
@@ -101,14 +89,14 @@ namespace ApplicationInsightsDataROI
                         operaiton.Telemetry.Success = false;
                     }
 
-                    //client.StopOperation(operaiton);
-                    //Console.WriteLine($"Iteration {iterations}. Elapesed time: {operaiton.Telemetry.Duration}");
+//                    client.StopOperation(operaiton);
+//                    Console.WriteLine($"Iteration {iterations}. Elapesed time: {operaiton.Telemetry.Duration}");
 
                 }
             }
 
-            Console.WriteLine($"Program sent 1Mb of telemetry in {iterations} iterations!");
-            Console.ReadLine();
+            //Console.WriteLine($"Program sent 1Mb of telemetry in {iterations} iterations!");
+            //Console.ReadLine();
         }
     }
 }

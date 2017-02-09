@@ -9,23 +9,23 @@ using Microsoft.ApplicationInsights.DataContracts;
 
 namespace ApplicationInsightsDataROI
 {
-    class ExampleTelemetryProcessor : ITelemetryProcessor
+    class DependencyFilteringTelemetryProcessor : ITelemetryProcessor
     {
         private ITelemetryProcessor _next;
 
-        public ExampleTelemetryProcessor(ITelemetryProcessor next)
+        public DependencyFilteringTelemetryProcessor(ITelemetryProcessor next)
         {
             this._next = next;
         }
 
         public void Process(ITelemetry item)
         {
-            if (item is RequestTelemetry)
+            if (item is DependencyTelemetry)
             {
-                var r = item as RequestTelemetry;
-                if (r.Duration > TimeSpan.FromSeconds(5))
+                var r = item as DependencyTelemetry;
+                if (r.Duration < TimeSpan.FromMilliseconds(300))
                 {
-                    ((ISupportSampling)item).SamplingPercentage = 100;
+                    return;
                 }
             }
             this._next.Process(item);
