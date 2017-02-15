@@ -23,10 +23,6 @@ namespace ApplicationInsightsDataROI
             TelemetryConfiguration configuration = new TelemetryConfiguration();
             configuration.InstrumentationKey = "fb8a0b03-235a-4b52-b491-307e9fd6b209";
 
-            var telemetryChannel = new ServerTelemetryChannel();
-            telemetryChannel.Initialize(configuration);
-            configuration.TelemetryChannel = telemetryChannel;
-
             // automatically track dependency calls
             var dependencies = new DependencyTrackingTelemetryModule();
             dependencies.Initialize(configuration);

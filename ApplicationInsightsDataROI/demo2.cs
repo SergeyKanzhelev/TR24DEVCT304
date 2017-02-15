@@ -23,10 +23,6 @@ namespace ApplicationInsightsDataROI
             TelemetryConfiguration configuration = new TelemetryConfiguration();
             configuration.InstrumentationKey = "fb8a0b03-235a-4b52-b491-307e9fd6b209";
 
-            var telemetryChannel = new ServerTelemetryChannel();
-            telemetryChannel.Initialize(configuration);
-            configuration.TelemetryChannel = telemetryChannel;
-
             // automatically track dependency calls
             var dependencies = new DependencyTrackingTelemetryModule();
             dependencies.Initialize(configuration);
@@ -60,11 +56,11 @@ namespace ApplicationInsightsDataROI
                     return new AdaptiveSamplingTelemetryProcessor(next)
                     {
                         ExcludedTypes = "Event", // exclude custom events from being sampled
-                        MaxTelemetryItemsPerSecond = 1, //default: 
-                        SamplingPercentageIncreaseTimeout = TimeSpan.FromSeconds(1), //default: 
-                        SamplingPercentageDecreaseTimeout = TimeSpan.FromSeconds(1), //default: 
-                        EvaluationInterval = TimeSpan.FromSeconds(1), //default: 
-                        InitialSamplingPercentage = 25 //default: 
+                        MaxTelemetryItemsPerSecond = 1, //default: 5 calls/sec
+                        SamplingPercentageIncreaseTimeout = TimeSpan.FromSeconds(1), //default: 2 min
+                        SamplingPercentageDecreaseTimeout = TimeSpan.FromSeconds(1), //default: 30 sec
+                        EvaluationInterval = TimeSpan.FromSeconds(1), //default: 15 sec
+                        InitialSamplingPercentage = 25 //default: 100% 
                     };
                 })
                 

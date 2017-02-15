@@ -23,10 +23,6 @@ namespace ApplicationInsightsDataROI
             TelemetryConfiguration configuration = new TelemetryConfiguration();
             configuration.InstrumentationKey = "fb8a0b03-235a-4b52-b491-307e9fd6b209";
 
-            var telemetryChannel = new ServerTelemetryChannel();
-            telemetryChannel.Initialize(configuration);
-            configuration.TelemetryChannel = telemetryChannel;
-
             // automatically track dependency calls
             var dependencies = new DependencyTrackingTelemetryModule();
             dependencies.Initialize(configuration);
@@ -63,13 +59,12 @@ namespace ApplicationInsightsDataROI
 
             // configure metrics collection
             MetricManager metricManager = new MetricManager(client);
-            var itemsProcessed = metricManager.CreateMetric("Items processed");
+            var itemsProcessed = metricManager.CreateMetric("Iterations");
             var processingFailed = metricManager.CreateMetric("Failed processing");
             var processingSize = metricManager.CreateMetric("Processing size");
 
             while (!state.IsTerminated)
             {
-
                 iterations++;
 
                 using (var operaiton = client.StartOperation<RequestTelemetry>("Process item"))
@@ -90,8 +85,6 @@ namespace ApplicationInsightsDataROI
 
                         // raw metric telemetry. Each call represents a document.
                         client.TrackMetric("[RAW] Response size", task.Result.Length);
-                        client.TrackMetric("[RAW] Successful responses", 1);
-
                     }
                     catch (Exception exc)
                     {
@@ -103,6 +96,11 @@ namespace ApplicationInsightsDataROI
 
                         client.TrackException(exc);
                         operaiton.Telemetry.Success = false;
+                    }
+                    finally
+                    {
+                        client.TrackMetric("[RAW] Iterations", 1);
+                        itemsProcessed.Track(1);
                     }
 
                     //                    client.StopOperation(operaiton);

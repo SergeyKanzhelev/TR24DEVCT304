@@ -23,7 +23,7 @@ namespace ApplicationInsightsDataROI
             if (item is DependencyTelemetry)
             {
                 var r = item as DependencyTelemetry;
-                if (r.Duration < TimeSpan.FromMilliseconds(300))
+                if (r.Duration < TimeSpan.FromMilliseconds(100))
                 {
                     return;
                 }
