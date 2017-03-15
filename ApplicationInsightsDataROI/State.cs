@@ -7,12 +7,6 @@ using System.Timers;
 
 namespace ApplicationInsightsDataROI
 {
-    class ProcessedItems
-    {
-        public int count;
-        public int size;
-    }
-
     class State
     {
         public System.Timers.Timer _timer;

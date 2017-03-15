@@ -20,11 +20,14 @@ namespace ApplicationInsightsDataROI
 
         public void Process(ITelemetry item)
         {
+            // check telemetry type
             if (item is DependencyTelemetry)
             {
                 var r = item as DependencyTelemetry;
                 if (r.Duration < TimeSpan.FromMilliseconds(100))
                 {
+                    // if dependency duration > 100 msec then stop telemetry  
+                    // processing and return from the pipeline
                     return;
                 }
             }

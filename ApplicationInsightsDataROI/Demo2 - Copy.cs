@@ -15,13 +15,13 @@ using System.Timers;
 
 namespace ApplicationInsightsDataROI
 {
-    class Demo2
+    class Demo2back
     {
         public static void Run()
         {
 
             TelemetryConfiguration configuration = new TelemetryConfiguration();
-            configuration.InstrumentationKey = "ad4a5cd4-9fb3-4e4e-9b9c-9f43e9939bfa";
+            configuration.InstrumentationKey = "fb8a0b03-235a-4b52-b491-307e9fd6b209";
 
             // automatically track dependency calls
             var dependencies = new DependencyTrackingTelemetryModule();
@@ -30,14 +30,14 @@ namespace ApplicationInsightsDataROI
             // automatically correlate all telemetry data with request
             configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
 
-            // initialize state for the telemetry size calculation
-            ProcessedItems CollectedItems = new ProcessedItems();
-            ProcessedItems SentItems = new ProcessedItems();
+            //// initialize price calculation logic
+            var state = new State();
+            state.Initialize();
 
-            // build telemetry processing pipeline
+            // enable sampling
             configuration.TelemetryProcessorChainBuilder
                 // this telemetry processor will be executed first for all telemetry items to calculate the size and # of items
-                .Use((next) => { return new SizeCalculatorTelemetryProcessor(next, CollectedItems); })
+                .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Collected); })
 
                 // this is a standard fixed sampling processor that will let only 10% 
                .Use((next) =>
@@ -63,9 +63,9 @@ namespace ApplicationInsightsDataROI
                         InitialSamplingPercentage = 25 //default: 100% 
                     };
                 })
-
+                
                 // this telemetry processor will be execuyted ONLY when telemetry is sampled in
-                .Use((next) => { return new SizeCalculatorTelemetryProcessor(next, SentItems); })
+                .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Sent); })
                 .Build();
 
 
@@ -74,15 +74,15 @@ namespace ApplicationInsightsDataROI
             var iterations = 0;
 
 
-            while (true)
+            while (!state.IsTerminated)
             {
 
                 iterations++;
 
                 using (var operaiton = client.StartOperation<RequestTelemetry>("Process item"))
                 {
-                    client.TrackEvent("test", new Dictionary<string, string>() { { "iteration", iterations.ToString() } });
-                    client.TrackTrace($"Iteration {iterations} happened", SeverityLevel.Information);
+                    client.TrackEvent("test");
+                    client.TrackTrace("Something happened", SeverityLevel.Information);
 
                     try
                     {
@@ -96,10 +96,15 @@ namespace ApplicationInsightsDataROI
                         client.TrackException(exc);
                         operaiton.Telemetry.Success = false;
                     }
-                    client.StopOperation(operaiton);
-                    Console.WriteLine($"Iteration {iterations}. Elapesed time: {operaiton.Telemetry.Duration}. Collected Telemetry: {CollectedItems.size}/{CollectedItems.count}. Sent Telemetry: {SentItems.size}/{SentItems.count}. Ratio: {CollectedItems.size/SentItems.size}");
+
+                    //client.StopOperation(operaiton);
+                    //Console.WriteLine($"Iteration {iterations}. Elapesed time: {operaiton.Telemetry.Duration}");
+
                 }
             }
+
+            Console.WriteLine($"Program sent 100K of telemetry in {iterations} iterations!");
+            Console.ReadLine();
         }
     }
 }
