@@ -19,7 +19,7 @@ namespace ApplicationInsightsDataROI
 
         static void Main_backup(string[] args)
         {
-            var state = new State();
+            var state = new _State();
             state.Initialize();
 
             TelemetryConfiguration configuration = new TelemetryConfiguration();

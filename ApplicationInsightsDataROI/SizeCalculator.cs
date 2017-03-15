@@ -11,10 +11,10 @@ namespace ApplicationInsightsDataROI
     class SizeCalculatorTelemetryProcessor : ITelemetryProcessor
     {
         private ITelemetryProcessor _next;
-        private ProcessedItems ProcessedItems;
+        private ItemsSize ProcessedItems;
 
 
-        public SizeCalculatorTelemetryProcessor(ITelemetryProcessor next, ProcessedItems items)
+        public SizeCalculatorTelemetryProcessor(ITelemetryProcessor next, ItemsSize items)
         {
             this._next = next;
             this.ProcessedItems = items;

@@ -11,9 +11,9 @@ namespace ApplicationInsightsDataROI
     class PriceCalculatorTelemetryProcessor : ITelemetryProcessor
     {
         private ITelemetryProcessor _next;
-        private ProcessedItems _state;
+        private ItemsSize _state;
 
-        public PriceCalculatorTelemetryProcessor(ITelemetryProcessor next, ProcessedItems state)
+        public PriceCalculatorTelemetryProcessor(ITelemetryProcessor next, ItemsSize state)
         {
             this._next = next;
             this._state = state;

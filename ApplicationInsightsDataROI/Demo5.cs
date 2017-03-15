@@ -31,8 +31,8 @@ namespace ApplicationInsightsDataROI
             configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
 
             // initialize state for the telemetry size calculation
-            ProcessedItems CollectedItems = new ProcessedItems();
-            ProcessedItems SentItems = new ProcessedItems();
+            ItemsSize CollectedItems = new ItemsSize();
+            ItemsSize SentItems = new ItemsSize();
 
             // build telemetry processing pipeline
             configuration.TelemetryProcessorChainBuilder

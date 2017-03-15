@@ -15,7 +15,7 @@ using System.Timers;
 
 namespace ApplicationInsightsDataROI
 {
-    class Demo2back
+    class Demo5back
     {
         public static void Run()
         {
@@ -30,8 +30,17 @@ namespace ApplicationInsightsDataROI
             // automatically correlate all telemetry data with request
             configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
 
-            //// initialize price calculation logic
-            var state = new State();
+            // set default properties for all telemetry items
+            configuration.TelemetryInitializers.Add(new DefaultTelemetryInitializer());
+
+            // send all event telemetry to a different iKey
+            configuration.TelemetryInitializers.Add(new BusinessTelemetryInitializer());
+
+            // configure all telemetry to be sent to a single node
+            configuration.TelemetryInitializers.Add(new NodeNameTelemetryInitializer());
+
+            // initialize price calculation logic
+            var state = new _State();
             state.Initialize();
 
             // enable sampling
@@ -39,31 +48,6 @@ namespace ApplicationInsightsDataROI
                 // this telemetry processor will be executed first for all telemetry items to calculate the size and # of items
                 .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Collected); })
 
-                // this is a standard fixed sampling processor that will let only 10% 
-               .Use((next) =>
-                {
-                    return new SamplingTelemetryProcessor(next)
-                    {
-                        IncludedTypes = "Dependency",
-                        SamplingPercentage = 10
-                    };
-                })
-
-                // this is a standard adaptive sampling telemetry processor that will sample in/out any telemetry item it receives
-                .Use((next) =>
-                {
-
-                    return new AdaptiveSamplingTelemetryProcessor(next)
-                    {
-                        ExcludedTypes = "Event", // exclude custom events from being sampled
-                        MaxTelemetryItemsPerSecond = 1, //default: 5 calls/sec
-                        SamplingPercentageIncreaseTimeout = TimeSpan.FromSeconds(1), //default: 2 min
-                        SamplingPercentageDecreaseTimeout = TimeSpan.FromSeconds(1), //default: 30 sec
-                        EvaluationInterval = TimeSpan.FromSeconds(1), //default: 15 sec
-                        InitialSamplingPercentage = 25 //default: 100% 
-                    };
-                })
-                
                 // this telemetry processor will be execuyted ONLY when telemetry is sampled in
                 .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Sent); })
                 .Build();
@@ -73,10 +57,14 @@ namespace ApplicationInsightsDataROI
 
             var iterations = 0;
 
+            // configure metrics collection
+            MetricManager metricManager = new MetricManager(client);
+            var itemsProcessed = metricManager.CreateMetric("Iterations");
+            var processingFailed = metricManager.CreateMetric("Failed processing");
+            var processingSize = metricManager.CreateMetric("Processing size");
 
             while (!state.IsTerminated)
             {
-
                 iterations++;
 
                 using (var operaiton = client.StartOperation<RequestTelemetry>("Process item"))
@@ -90,18 +78,39 @@ namespace ApplicationInsightsDataROI
                         var task = http.GetStringAsync("http://bing.com");
                         task.Wait();
 
+                        // metrics aggregation. Metrics are aggregated and sent once per minute
+                        itemsProcessed.Track(1);
+                        processingSize.Track(task.Result.Length);
+                        processingFailed.Track(0);
+
+                        // raw metric telemetry. Each call represents a document.
+                        client.TrackMetric("[RAW] Response size", task.Result.Length);
                     }
                     catch (Exception exc)
                     {
+                        // raw metric telemetry
+                        client.TrackMetric("[RAW] Successful responses", 0);
+
+                        // metrics aggregation:
+                        processingFailed.Track(1);
+
                         client.TrackException(exc);
                         operaiton.Telemetry.Success = false;
                     }
+                    finally
+                    {
+                        client.TrackMetric("[RAW] Iterations", 1);
+                        itemsProcessed.Track(1);
+                    }
 
-                    //client.StopOperation(operaiton);
-                    //Console.WriteLine($"Iteration {iterations}. Elapesed time: {operaiton.Telemetry.Duration}");
+                    //                    client.StopOperation(operaiton);
+                    //                    Console.WriteLine($"Iteration {iterations}. Elapesed time: {operaiton.Telemetry.Duration}");
 
                 }
             }
+
+            // send all metrics before exiting the program
+            metricManager.Flush();
 
             Console.WriteLine($"Program sent 100K of telemetry in {iterations} iterations!");
             Console.ReadLine();

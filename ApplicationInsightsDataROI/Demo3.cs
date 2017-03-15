@@ -1,17 +1,11 @@
-﻿using Microsoft.ApplicationInsights;
+﻿using System;
+using System.Net.Http;
+using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.DependencyCollector;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Timers;
-
 
 namespace ApplicationInsightsDataROI
 {
@@ -30,14 +24,10 @@ namespace ApplicationInsightsDataROI
             // automatically correlate all telemetry data with request
             configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
 
-            //// initialize price calculation logic
-            var state = new State();
-            state.Initialize();
-
             // enable sampling
             configuration.TelemetryProcessorChainBuilder
                 // this telemetry processor will be executed first for all telemetry items to calculate the size and # of items
-                .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Collected); })
+                .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, ItemsSize.CollectedItems); })
 
                 // exemplify dependency telemetry that is faster than 100 msec
                 .Use((next) => { return new DependencyExampleTelemetryProcessor(next); })
@@ -51,33 +41,26 @@ namespace ApplicationInsightsDataROI
                     };
                 })
 
-
                 // this telemetry processor will be execuyted ONLY when telemetry is sampled in
-                .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, state.Sent); })
+                .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, ItemsSize.SentItems); })
                 .Build();
 
 
             TelemetryClient client = new TelemetryClient(configuration);
 
-            var iterations = 0;
+            var iteration = 0;
 
-
-            while (!state.IsTerminated)
+            while (true)
             {
-
-                iterations++;
-
                 using (var operaiton = client.StartOperation<RequestTelemetry>("Process item"))
                 {
-                    client.TrackEvent("test");
-                    client.TrackTrace("Something happened", SeverityLevel.Information);
+                    client.TrackEvent("IterationStarted", new Dictionary<string, string>() { { "iteration", iteration.ToString() } });
+                    client.TrackTrace($"Iteration {iteration} started", SeverityLevel.Information);
 
                     try
                     {
-                        HttpClient http = new HttpClient();
-                        var task = http.GetStringAsync("http://bing.com");
+                        var task = (new HttpClient()).GetStringAsync("http://bing.com");
                         task.Wait();
-
                     }
                     catch (Exception exc)
                     {
@@ -85,14 +68,11 @@ namespace ApplicationInsightsDataROI
                         operaiton.Telemetry.Success = false;
                     }
 
-//                    client.StopOperation(operaiton);
-//                    Console.WriteLine($"Iteration {iterations}. Elapesed time: {operaiton.Telemetry.Duration}");
-
+                    client.StopOperation(operaiton);
+                    Console.WriteLine($"Iteration {iteration}. Elapesed time: {operaiton.Telemetry.Duration}. Collected Telemetry: {ItemsSize.CollectedItems.size}/{ItemsSize.CollectedItems.count}. Sent Telemetry: {ItemsSize.SentItems.size}/{ItemsSize.SentItems.count}. Ratio: {ItemsSize.CollectedItems.size / ItemsSize.SentItems.size}");
+                    iteration++;
                 }
             }
-
-            Console.WriteLine($"Program sent 100K of telemetry in {iterations} iterations!");
-            Console.ReadLine();
         }
     }
 }

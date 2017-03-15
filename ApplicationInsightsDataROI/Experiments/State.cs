@@ -7,15 +7,15 @@ using System.Timers;
 
 namespace ApplicationInsightsDataROI
 {
-    class State
+    class _State
     {
         public System.Timers.Timer _timer;
 
         public bool IsTerminated { get; set; }
 
-        public ProcessedItems Collected = new ProcessedItems();
+        public ItemsSize Collected = new ItemsSize();
 
-        public ProcessedItems Sent = new ProcessedItems();
+        public ItemsSize Sent = new ItemsSize();
 
         private void OnTimedEvent(object sender, ElapsedEventArgs e)
         {

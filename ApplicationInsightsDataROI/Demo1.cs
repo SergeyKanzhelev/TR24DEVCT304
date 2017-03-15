@@ -1,26 +1,18 @@
-﻿using Microsoft.ApplicationInsights;
+﻿using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.DependencyCollector;
 using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Timers;
 
 
 namespace ApplicationInsightsDataROI
 {
     class Demo1
     {
-
         public static void Run()
         {
-
             // set iKey
             TelemetryConfiguration configuration = new TelemetryConfiguration();
             configuration.InstrumentationKey = "fb8a0b03-235a-4b52-b491-307e9fd6b209";
@@ -34,25 +26,19 @@ namespace ApplicationInsightsDataROI
 
             TelemetryClient client = new TelemetryClient(configuration);
 
-            var iterations = 0;
-
+            var iteration = 0;
 
             while (true)
             {
-
-                iterations++;
-
                 using (var operaiton = client.StartOperation<RequestTelemetry>("Process item"))
                 {
-                    client.TrackEvent("test", new Dictionary<string, string>() { { "iteration", iterations.ToString() } });
-                    client.TrackTrace($"Iteration {iterations} happened", SeverityLevel.Information);
+                    client.TrackEvent("IterationStarted", new Dictionary<string, string>() { { "iteration", iteration.ToString() } });
+                    client.TrackTrace($"Iteration {iteration} started", SeverityLevel.Information);
 
                     try
                     {
-                        HttpClient http = new HttpClient();
-                        var task = http.GetStringAsync("http://bing.com");
+                        var task = (new HttpClient()).GetStringAsync("http://bing.com");
                         task.Wait();
-
                     }
                     catch (Exception exc)
                     {
@@ -61,9 +47,9 @@ namespace ApplicationInsightsDataROI
                     }
 
                     client.StopOperation(operaiton);
-                    Console.WriteLine($"Iteration {iterations}. Elapesed time: {operaiton.Telemetry.Duration}");
+                    Console.WriteLine($"Iteration {iteration}. Elapesed time: {operaiton.Telemetry.Duration}");
+                    iteration++;
                 }
-
             }
         }
     }
