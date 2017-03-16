@@ -74,17 +74,17 @@ namespace ApplicationInsightsDataROI
             MetricManager metricManager = new MetricManager(client);
             var reductionsize = metricManager.CreateMetric("Reduction Size");
 
-            var iterations = 0;
+            var iteration = 0;
 
             while (true)
             {
 
-                iterations++;
+                iteration++;
 
                 using (var operaiton = client.StartOperation<RequestTelemetry>("Process item"))
                 {
-                    client.TrackEvent("test", new Dictionary<string, string>() { { "iteration", iterations.ToString() } });
-                    client.TrackTrace($"Iteration {iterations} happened", SeverityLevel.Information);
+                    client.TrackEvent("test", new Dictionary<string, string>() { { "iteration", iteration.ToString() } });
+                    client.TrackTrace($"Iteration {iteration} happened", SeverityLevel.Information);
 
                     try
                     {
@@ -99,7 +99,7 @@ namespace ApplicationInsightsDataROI
                         operaiton.Telemetry.Success = false;
                     }
                     client.StopOperation(operaiton);
-                    Console.WriteLine($"Iteration {iterations}. Elapesed time: {operaiton.Telemetry.Duration}. Collected Telemetry: {CollectedItems.size}/{CollectedItems.count}. Sent Telemetry: {SentItems.size}/{SentItems.count}. Ratio: {CollectedItems.size / SentItems.size}");
+                    Console.WriteLine($"Iteration {iteration}. Elapesed time: {operaiton.Telemetry.Duration}. Collected Telemetry: {CollectedItems.size}/{CollectedItems.count}. Sent Telemetry: {SentItems.size}/{SentItems.count}. Ratio: {1.0 * CollectedItems.size / SentItems.size}");
 
                     reductionsize.Track(CollectedItems.size - SentItems.size);
                     client.TrackMetric("[RAW] Reduction Size", CollectedItems.size - SentItems.size);

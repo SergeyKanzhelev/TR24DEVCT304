@@ -85,7 +85,7 @@ namespace ApplicationInsightsDataROI
                         operaiton.Telemetry.Success = false;
                     }
                     client.StopOperation(operaiton);
-                    Console.WriteLine($"Iteration {iteration}. Elapesed time: {operaiton.Telemetry.Duration}. Collected Telemetry: {CollectedItems.size}/{CollectedItems.count}. Sent Telemetry: {SentItems.size}/{SentItems.count}. Ratio: {CollectedItems.size/SentItems.size}");
+                    Console.WriteLine($"Iteration {iteration}. Elapesed time: {operaiton.Telemetry.Duration}. Collected Telemetry: {CollectedItems.size}/{CollectedItems.count}. Sent Telemetry: {SentItems.size}/{SentItems.count}. Ratio: {1.0 * CollectedItems.size / SentItems.size}");
                     iteration++;
                 }
             }
