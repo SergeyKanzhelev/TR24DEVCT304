@@ -64,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BusinessTelemetryInitializer.cs" />
+    <Compile Include="DependencyFilteringWithMetricsTelemetryProcessor.cs" />
     <Compile Include="Experiments\Demo2 - Copy.cs" />
     <Compile Include="Experiments\Demo5 - Copy.cs" />
     <Compile Include="Demo5.cs" />

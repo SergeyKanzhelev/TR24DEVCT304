@@ -1,16 +1,11 @@
-﻿using Microsoft.ApplicationInsights;
+﻿using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.DependencyCollector;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Timers;
 
 
 namespace ApplicationInsightsDataROI
@@ -39,8 +34,12 @@ namespace ApplicationInsightsDataROI
                 // this telemetry processor will be executed first for all telemetry items to calculate the size and # of items
                 .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, ItemsSize.CollectedItems); })
 
-                // exemplify dependency telemetry that is faster than 100 msec
-                .Use((next) => { return new DependencyFilteringTelemetryProcessor(next, configuration); })
+                // filter telemetry that is faster than 100 msec
+                .Use((next) => { return new DependencyFilteringTelemetryProcessor(next); })
+
+                // filter telemetry that is faster than 100 msec
+                // extract metrics
+                //.Use((next) => { return new DependencyFilteringWithMetricsTelemetryProcessor(next, configuration); })
 
                 // this telemetry processor will be execuyted ONLY when telemetry is sampled in
                 .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, ItemsSize.SentItems); })
