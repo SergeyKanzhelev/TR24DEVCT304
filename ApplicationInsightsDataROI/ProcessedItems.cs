@@ -1,6 +1,4 @@
-﻿using System.Threading;
-
-namespace ApplicationInsightsDataROI
+﻿namespace ApplicationInsightsDataROI
 {
     class ProcessedItems
     {

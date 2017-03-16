@@ -86,7 +86,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Experiments\State.cs" />
-    <Compile Include="ItemsSize.cs" />
+    <Compile Include="ProcessedItems.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
