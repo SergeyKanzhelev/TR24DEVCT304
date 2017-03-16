@@ -39,11 +39,11 @@ namespace ApplicationInsightsDataROI
                 .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, CollectedItems); })
 
                 // filter telemetry that is faster than 100 msec
-                .Use((next) => { return new DependencyFilteringTelemetryProcessor(next); })
+                //.Use((next) => { return new DependencyFilteringTelemetryProcessor(next); })
 
                 // filter telemetry that is faster than 100 msec
                 // extract metrics
-                //.Use((next) => { return new DependencyFilteringWithMetricsTelemetryProcessor(next, configuration); })
+                .Use((next) => { return new DependencyFilteringWithMetricsTelemetryProcessor(next, configuration); })
 
                 // this telemetry processor will be execuyted ONLY when telemetry is sampled in
                 .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, SentItems); })
