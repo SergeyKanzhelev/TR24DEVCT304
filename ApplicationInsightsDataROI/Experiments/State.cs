@@ -13,9 +13,9 @@ namespace ApplicationInsightsDataROI
 
         public bool IsTerminated { get; set; }
 
-        public ItemsSize Collected = new ItemsSize();
+        public ProcessedItems Collected = new ProcessedItems();
 
-        public ItemsSize Sent = new ItemsSize();
+        public ProcessedItems Sent = new ProcessedItems();
 
         private void OnTimedEvent(object sender, ElapsedEventArgs e)
         {

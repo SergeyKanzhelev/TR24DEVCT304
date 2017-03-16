@@ -24,10 +24,14 @@ namespace ApplicationInsightsDataROI
             // automatically correlate all telemetry data with request
             configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
 
+            // initialize state for the telemetry size calculation
+            ProcessedItems CollectedItems = new ProcessedItems();
+            ProcessedItems SentItems = new ProcessedItems();
+
             // enable sampling
             configuration.TelemetryProcessorChainBuilder
                 // this telemetry processor will be executed first for all telemetry items to calculate the size and # of items
-                .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, ItemsSize.CollectedItems); })
+                .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, CollectedItems); })
 
                 // exemplify dependency telemetry that is faster than 100 msec
                 .Use((next) => { return new DependencyExampleTelemetryProcessor(next); })
@@ -42,7 +46,7 @@ namespace ApplicationInsightsDataROI
                 })
 
                 // this telemetry processor will be execuyted ONLY when telemetry is sampled in
-                .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, ItemsSize.SentItems); })
+                .Use((next) => { return new PriceCalculatorTelemetryProcessor(next, SentItems); })
                 .Build();
 
 
@@ -69,7 +73,7 @@ namespace ApplicationInsightsDataROI
                     }
 
                     client.StopOperation(operaiton);
-                    Console.WriteLine($"Iteration {iteration}. Elapesed time: {operaiton.Telemetry.Duration}. Collected Telemetry: {ItemsSize.CollectedItems.size}/{ItemsSize.CollectedItems.count}. Sent Telemetry: {ItemsSize.SentItems.size}/{ItemsSize.SentItems.count}. Ratio: {ItemsSize.CollectedItems.size / ItemsSize.SentItems.size}");
+                    Console.WriteLine($"Iteration {iteration}. Elapesed time: {operaiton.Telemetry.Duration}. Collected Telemetry: {CollectedItems.size}/{CollectedItems.count}. Sent Telemetry: {SentItems.size}/{SentItems.count}. Ratio: {CollectedItems.size / SentItems.size}");
                     iteration++;
                 }
             }
